@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Clouddrop</title>
+  <style>
+    body { font-family: Arial; display:flex; flex-direction:column; align-items:center; margin-top:50px;}
+    input { display:block; margin:10px 0; padding:6px; width:200px; }
+    button { padding: 6px 12px; margin: 5px; }
+    #message { color:red; }
+  </style>
+</head>
+<body>
+  <button id="toggleBtn">Switch to Login</button>
+  <h1 id="title">Register</h1>
+
+  <form id="authForm">
+    <label>Username</label>
+    <input type="text" id="username" placeholder="Username" required>
+    
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Password" required>
+    
+    <button type="submit" id="submitBtn">Register</button>
+  </form>
+
+  <p id="message"></p>
+
+  <script>
+    const SERVER = "https://clouddrop-central-server-production.up.railway.app/";
+    let isLogin = false;
+
+    const toggleBtn = document.getElementById("toggleBtn");
+    const title = document.getElementById("title");
+    const submitBtn = document.getElementById("submitBtn");
+    const messageEl = document.getElementById("message");
+    const form = document.getElementById("authForm");
+
+    toggleBtn.addEventListener("click", () => {
+      isLogin = !isLogin;
+      title.textContent = isLogin ? "Login" : "Register";
+      submitBtn.textContent = isLogin ? "Login" : "Register";
+      toggleBtn.textContent = isLogin ? "Switch to Register" : "Switch to Login";
+      messageEl.textContent = "";
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const res = await fetch(SERVER + (isLogin ? "login" : "register"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          messageEl.style.color = "green";
+          messageEl.textContent = data.message + " Success!";
+          if (data.token) {
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("username", username);
+            window.location.href = "dashboard.html";
+          }
+        } else {
+          messageEl.style.color = "red";
+          messageEl.textContent = data.error || "Failed!";
+        }
+      } catch (err) {
+        messageEl.style.color = "red";
+        messageEl.textContent = "Server not reachable!";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Clouddrop</title>
+  <style>
+    body { font-family: Arial; text-align:center; margin-top:50px; }
+    button { padding:6px 12px; margin-top:20px; }
+  </style>
+</head>
+<body>
+  <h1>Dashboard</h1>
+  <p id="token"></p>
+  
+  <label>Location: </label>
+  <input id="folderinput" type="text" placeholder="Location" readonly/>
+  <button id="selectFolderbtn">Select Folder</button> 
+  <br>
+  <br>
+  <label>PORT Number: </label>
+  <input id="portinput" type="number" placeholder="Location" value="8080"/>
+  <br>
+  
+  <button id="createbtn">
+    Create Server
+  </button>
+  <br>
+  <img src="" id="qrcode" alt="Start Server and QR Appears here"/>
+  <p id="instruction"></p>
+  <button id="logout">Logout</button>
+  <script>
+    const { ipcRenderer } = require('electron');
+    let publicURL;
+    const token = localStorage.getItem('token');
+    const username = localStorage.getItem('username');
+    document.getElementById('token').innerText = "Token: " + token;
+    document.getElementById('logout').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      window.location.href = 'index.html'; 
+    });
+    document.getElementById('selectFolderbtn').addEventListener('click', async ()=>{
+        const path = await ipcRenderer.invoke('select-folder');
+        if(path){
+            document.getElementById('folderinput').value = path;
+        }
+    })
+    document.getElementById('createbtn').addEventListener('click', async () =>{
+        const folder = document.getElementById('folderinput').value;
+        const port = document.getElementById('portinput').value;
+        if(!folder || !port){
+            alert("Select Folder/PORT First");
+            return;
+        }
+        await ipcRenderer.invoke('start-go-server', folder, port, username);
+        publicURL = await ipcRenderer.invoke('start-tunnel', port);
+        console.log(publicURL);
+        const qr = document.getElementById("qrcode");
+        qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(publicURL)}`;
+        const inst = document.getElementById("instruction");
+        inst.textContent = "Scan this QR"
+    })
+
+    if (!token) {
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

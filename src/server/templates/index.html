@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head><title>CouldDrop</title></head>
+<body>
+  <h2>Upload a File</h2>
+  <form action="/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" />
+    <button type="submit">Upload</button>
+  </form>
+
+  <h2>Files</h2>
+  <ul id="file-list"></ul>
+
+  <script>
+    fetch('/files')
+      .then(res => res.json())
+      .then(files => {
+        const list = document.getElementById("file-list");
+        files.forEach(file => {
+          const li = document.createElement("li");
+          li.innerHTML = `<a href="/download/${file.name}">${file.name}</a> - ${file.type} - ${file.time}`;
+          list.appendChild(li);
+        });
+      });
+  </script>
+</body>
+</html>
